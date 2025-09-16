@@ -15,7 +15,7 @@ df <- read_csv("data/tpp-2025-09-15-general.csv") |>
 ```
 
 
-```{r}
+```{r eda}
 df |> names()
 
 df |> glimpse()
@@ -94,3 +94,7 @@ df |>
     count(ideological_affiliation, sort = TRUE)
 
 ```
+
+## References
+
+Loadenthal, Michael, Lauren Donahoe, Madison Weaver, Sara Godfrey, Kathryn Blowers, et. al. “The Prosecution Project Dataset,” the Prosecution Project, 2023 [dataset]. https://theprosecutionproject.org/
