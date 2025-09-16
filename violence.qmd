@@ -1,0 +1,96 @@
+---
+format: html
+---
+
+# Political Violence
+
+```{r}
+library(tidyverse)
+library(janitor)
+```
+
+```{r}
+df <- read_csv("data/tpp-2025-09-15-general.csv") |> 
+    clean_names()
+```
+
+
+```{r}
+df |> names()
+
+df |> glimpse()
+
+df |>
+    pull(criminal_method) |> 
+    unique()
+
+df |>
+    filter(criminal_method == "Criminal violation not linked or motivated politically") |> 
+    nrow()
+
+df <- df |>
+    filter(!criminal_method %in% c("Unknown/unspecified/undeveloped", "Criminal violation not linked or motivated politically"))
+
+violent <- c(
+  "Unarmed assault",
+  "Hostage-taking",
+  "Armed intimidation/standoff",
+  "Vehicle ramming",
+  "Chemical or biological weapon deployment",
+  "Firearms: civilian",
+  "Firearms: military",
+  "Explosives",
+  "Other weapons"
+)
+
+df |>
+    count(criminal_method, sort = TRUE)
+
+df <- df |> 
+    mutate(method_type = if_else(
+        criminal_method %in% violent,
+        "violent",
+        "non-violent"
+    ))
+
+df |>
+    count(ideological_affiliation, sort = TRUE)
+
+df |>
+    count(racial_ethnic_group, method_type)
+
+df |>
+    count(date_descriptor, sort = TRUE)
+
+df |> 
+    count(racial_ethnic_group, sort = TRUE)
+
+df |> 
+    count(ideological_affiliation, racial_ethnic_group) |> 
+    arrange(ideological_affiliation, desc(racial_ethnic_group)) |> 
+    View()
+
+df |>
+    pull(racial_ethnic_group) |> 
+    unique()
+
+df |> 
+    filter(str_detect(racial_ethnic_group, "^Black.*")) |>
+    count(ideological_affiliation, sort = TRUE)
+
+df |> 
+    filter(str_detect(racial_ethnic_group, "^White.*")) |>
+    count(ideological_affiliation, sort = TRUE)
+
+df |> 
+    count(criminal_method, sort = TRUE)
+
+df |> 
+    filter(str_detect(criminal_method, "^Firearms.*")) |>
+    count(ideological_affiliation, sort = TRUE)
+
+df |> 
+    filter(str_detect(criminal_method, "^Explosive.*")) |>
+    count(ideological_affiliation, sort = TRUE)
+
+```
