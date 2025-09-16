@@ -1,0 +1,13 @@
+product_type = 'connect_cloud'
+'$schema' = 'https://cdn.posit.co/publisher/schemas/posit-publishing-schema-v3.json'
+type = 'html'
+entrypoint = 'violence.html'
+source = 'violence.qmd'
+validate = true
+files = [
+  '/violence.html',
+  '/violence_files',
+  '/.posit/publish/Political Violence in the Unit-JBLI.toml',
+  '/.posit/publish/deployments/deployment-SUTU.toml'
+]
+title = 'Political Violence in the United States'

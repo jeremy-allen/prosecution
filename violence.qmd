@@ -1,36 +1,53 @@
 ---
+author: Jeremy Allen
 format: html
+code-fold: true
 ---
 
 # Political Violence
+This analysis uses data from The Prosecution Project Dataset (Loadenthal et al. 2023) to examine the number of prosecutions for violent crimes across ideological affiliations. The dataset includes information on various criminal methods, ideological affiliations, and prosecution details.
 
 ```{r}
-library(tidyverse)
-library(janitor)
+#| message: false
+#| warning: false
+
+suppressPackageStartupMessages({
+    library(tidyverse)
+    library(janitor)
+    library(RColorBrewer)
+})
 ```
 
+## Prepare the data
+
+Import the data and clean the column names.
 ```{r}
+#| message: false
+#| warning: false
 df <- read_csv("data/tpp-2025-09-15-general.csv") |> 
     clean_names()
 ```
 
-
-```{r eda}
-df |> names()
-
-df |> glimpse()
-
-df |>
-    pull(criminal_method) |> 
-    unique()
-
+How many cases are not linked or motivated politically?
+```{r}
+#| message: false
+#| warning: false
 df |>
     filter(criminal_method == "Criminal violation not linked or motivated politically") |> 
     nrow()
+```
 
+
+### Remove cases not politically motivated or unknown, then classify criminal methods as violent or non-violent.
+```{r}
+#| message: false
+#| warning: false
+
+# remove cases not politically motivated or unknown
 df <- df |>
     filter(!criminal_method %in% c("Unknown/unspecified/undeveloped", "Criminal violation not linked or motivated politically"))
 
+# classify methods as violent or non-violent
 violent <- c(
   "Unarmed assault",
   "Hostage-taking",
@@ -43,9 +60,6 @@ violent <- c(
   "Other weapons"
 )
 
-df |>
-    count(criminal_method, sort = TRUE)
-
 df <- df |> 
     mutate(method_type = if_else(
         criminal_method %in% violent,
@@ -53,48 +67,129 @@ df <- df |>
         "non-violent"
     ))
 
-df |>
-    count(ideological_affiliation, sort = TRUE)
+```
 
-df |>
-    count(racial_ethnic_group, method_type)
+### Which ideological affiliations are present?
+```{r}
+#| message: false
+#| warning: false
+df |> count(ideological_affiliation)
+```
 
-df |>
-    count(date_descriptor, sort = TRUE)
+### Because there are multiple leftist categories and multiple rightist categories, lets add a column that consolidates leftist types and rightest types.
+```{r}
+#| message: false
+#| warning: false
+df <- df |> 
+    mutate(
+        ideology_simple = case_when(
+            str_detect(ideological_affiliation, "Leftist") ~ "Leftist",
+            str_detect(ideological_affiliation, "Rightist") ~ "Rightist",
+            TRUE ~ ideological_affiliation
+        )
+    )
 
+df |> count(ideology_simple)
+```
+
+### How many prosecutions were for violent vs. non-violent methods, by ideological affiliation?
+```{r}
+#| message: false
+#| warning: false
 df |> 
-    count(racial_ethnic_group, sort = TRUE)
+    group_by(ideology_simple, method_type) |> 
+    summarise(n = n()) |> 
+    pivot_wider(names_from = method_type, values_from = n, values_fill = 0) |>
+    select(ideology_simple, violent, `non-violent`) |>
+    arrange(desc(violent))
+```
 
-df |> 
-    count(ideological_affiliation, racial_ethnic_group) |> 
-    arrange(ideological_affiliation, desc(racial_ethnic_group)) |> 
-    View()
+## Prosections for violent crimes by ideological affiliation
+```{r}
+#| message: false
+#| warning: false
 
-df |>
-    pull(racial_ethnic_group) |> 
-    unique()
+violent_crimes_by_ideology <- df |> 
+    filter(method_type == "violent") |> 
+    count(ideology_simple, name = "violent_prosecutions") |> 
+    arrange(desc(violent_prosecutions))
 
-df |> 
-    filter(str_detect(racial_ethnic_group, "^Black.*")) |>
-    count(ideological_affiliation, sort = TRUE)
+ggplot(violent_crimes_by_ideology, aes(x = reorder(ideology_simple, violent_prosecutions), 
+                                       y = violent_prosecutions)) +
+    geom_col(fill = "black", alpha = 0.8) +
+    coord_flip() +
+    labs(
+        title = "Prosecutions for Violent Crimes by Ideological Affiliation",
+        subtitle = "Based on The Prosecution Project Dataset",
+        x = "Ideological Affiliation",
+        y = "Number of Prosecutions for Violent Crimes",
+        caption = "Source: The Prosecution Project, 2023"
+    ) +
+    theme_minimal() +
+    theme(
+        plot.title = element_text(size = 14, face = "bold"),
+        plot.subtitle = element_text(size = 12),
+        axis.text = element_text(size = 10),
+        axis.title = element_text(size = 11)
+    )
+```
 
-df |> 
-    filter(str_detect(racial_ethnic_group, "^White.*")) |>
-    count(ideological_affiliation, sort = TRUE)
+## Prosecutions for violent crimes by ideological affiliation by year
+```{r}
+#| message: false
+#| warning: false
+#| column: screen-inset
 
-df |> 
-    count(criminal_method, sort = TRUE)
+# Extract year from the date column and create the data for the stacked bar chart
+df_yearly <- df |>
+    # Extract year from date (handling different date formats)
+    mutate(year = case_when(
+        str_detect(date, "/") ~ as.numeric(str_extract(date, "\\d{4}$")),
+        str_detect(date, "-") ~ as.numeric(str_extract(date, "^\\d{4}"))
+    )) |>
+    # Filter out any rows where year extraction failed
+    filter(!is.na(year)) |>
+    # Count prosecutions by year and ideology
+    count(year, ideology_simple, name = "prosecutions")
 
-df |> 
-    filter(str_detect(criminal_method, "^Firearms.*")) |>
-    count(ideological_affiliation, sort = TRUE)
-
-df |> 
-    filter(str_detect(criminal_method, "^Explosive.*")) |>
-    count(ideological_affiliation, sort = TRUE)
-
+# Create a custom color palette that clearly distinguishes ideologies
+# Use a manual color scale with intuitive colors
+ggplot(df_yearly, aes(x = year, y = prosecutions, fill = ideology_simple)) +
+    geom_col() +
+    scale_fill_manual(values = c(
+        "Rightist" = "#c14a58ff",                    # Red for Rightist
+        "Leftist" = "#337fb5ff",                     # Blue for Leftist  
+        "Salafi/Jihadist/Islamist" = "#e08738ff",    # Orange
+        "Unclear" = "#71a771ff",                     # Green
+        "No affiliation/not a factor" = "#999999ff", # Purple
+        "Nationalist-separatist" = "#8c564b",      # Brown
+        "Other" = "#e377c2"                        # Pink
+    )) +
+    labs(
+        title = "Total Prosecutions by Year, Colored by Ideological Affiliation",
+        subtitle = "Based on The Prosecution Project Dataset",
+        x = "Year",
+        y = "Number of Prosecutions",
+        fill = "Ideological Affiliation",
+        caption = "Source: The Prosecution Project, 2023"
+    ) +
+    theme_minimal() +
+    theme(
+        plot.title = element_text(size = 14, face = "bold"),
+        plot.subtitle = element_text(size = 12),
+        axis.text = element_text(size = 10),
+        axis.title = element_text(size = 11),
+        legend.position = "bottom",
+        legend.title = element_text(size = 10),
+        legend.text = element_text(size = 9)
+    ) +
+    guides(fill = guide_legend(ncol = 3)) +
+    scale_x_continuous(breaks = scales::pretty_breaks(n = 8))
 ```
 
 ## References
 
 Loadenthal, Michael, Lauren Donahoe, Madison Weaver, Sara Godfrey, Kathryn Blowers, et. al. “The Prosecution Project Dataset,” the Prosecution Project, 2023 [dataset]. https://theprosecutionproject.org/
+
+## Code
+This descriptive analysis was created by Jeremy Allen using R, tidyverse, janitor, and RColorBrewer packages. The report is built with Quarto. The code is available on [GitHub](https://github.com/jeremy-allen/prosecution.git)
