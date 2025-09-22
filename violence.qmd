@@ -253,7 +253,7 @@ ggplot(df_yearly, aes(x = year, y = prosecutions, fill = ideology_simple)) +
 #| message: false
 #| warning: false
 
-# Don't double count deaths in case where more than one person is tried for the same incident
+# Don't double count deaths in cases where more than one person is tried for the same incident
 df_deaths <- violent_crimes |>
   mutate(
     # Extract the incident date from Case ID (first part before underscore)  
