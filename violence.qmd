@@ -132,7 +132,7 @@ df |>
 # Focus on Violence
 
 ### How many prosecutions were for violent vs. non-violent methods, by ideological affiliation?
-Then let's filter for only those to make our visualizations
+Then let's filter for only those to make our visualizations.
 ```{r}
 #| message: false
 #| warning: false
