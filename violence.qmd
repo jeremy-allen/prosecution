@@ -171,7 +171,7 @@ df |>
 ```{r}
 #| message: false
 #| warning: false
-#| fig-width: 12
+#| fig-width: 11
 
 violent_crimes <- df |> 
     filter(
@@ -207,7 +207,7 @@ ggplot(violent_crimes_by_ideology, aes(x = reorder(ideology_simple, violent_pros
 ```{r}
 #| message: false
 #| warning: false
-#| fig-width: 14
+#| fig-width: 13
 #| column: page
 
 df_yearly <- violent_crimes |>
@@ -253,7 +253,7 @@ ggplot(df_yearly, aes(x = year, y = prosecutions, fill = ideology_simple)) +
 ```{r}
 #| message: false
 #| warning: false
-#| fig-width: 12
+#| fig-width: 11
 
 # Don't double count deaths in cases where more than one person is tried for the same incident
 df_deaths <- violent_crimes |>
