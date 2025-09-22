@@ -11,8 +11,8 @@ id = '01995347-b373-b112-1a66-b7d742de80da'
 dashboard_url = 'https://connect.posit.cloud/jeremyallen/content/01995347-b373-b112-1a66-b7d742de80da'
 direct_url = 'https://01995347-b373-b112-1a66-b7d742de80da.share.connect.posit.cloud'
 logs_url = 'https://connect.posit.cloud/jeremyallen/content/01995347-b373-b112-1a66-b7d742de80da/history'
-deployed_at = '2025-09-22T14:09:48-04:00'
-bundle_id = '0199729e-1658-0192-aefc-82c78839de03'
+deployed_at = '2025-09-22T14:12:51-04:00'
+bundle_id = '019972a0-e4e1-a2ad-7d67-9434a7f048cf'
 files = [
   '.posit/publish/Political Violence in the Unit-JBLI.toml',
   '.posit/publish/deployments/deployment-SUTU.toml',
