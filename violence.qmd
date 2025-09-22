@@ -286,10 +286,10 @@ plot1 <- ggplot(df_deaths, aes(x = reorder(ideology_simple, total_deaths),
     geom_col(fill = "black", alpha = 0.8) +
     coord_flip() +
     labs(
-        title = "Total Deaths from Violent Crimes in the US",
-        subtitle = "",
+        title = "Deaths from Violent Crimes Prosecuted in the US",
+        subtitle = "By Ideological Affiliation",
         x = "Ideological Affiliation",
-        y = "Total Deaths from Violent Crimes",
+        y = "Deaths",
         caption = "Source: The Prosecution Project"
     ) +
     theme_minimal() +
