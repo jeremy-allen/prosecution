@@ -27,6 +27,16 @@ Import the data, clean the column names, and filter for only the US.
 df <- read_csv("data/tpp-2025-09-15-general.csv") |> 
     clean_names()
 
+# fix the mix of numeric and character in the # killed coloumn
+df <- df |> 
+    mutate(
+    number_killed = case_when(
+      number_killed %in% c("Multiple", "Unknown") ~ NA_real_,  # Convert text to NA
+      is.na(number_killed) ~ NA_real_,  # Keep existing NAs
+      TRUE ~ number_killed  # Keep numeric values as they are
+    )
+  )
+
 df <- df |> 
     filter(location_country == "United States")
 ```
