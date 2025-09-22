@@ -67,6 +67,13 @@ df <- df |>
         "non-violent"
     ))
 
+# parse dates
+df <- df |> 
+    mutate(
+        date = str_trim(date),
+        date = lubridate::mdy(date)
+    )
+
 ```
 
 ### Which ideological affiliations are present?
@@ -89,10 +96,11 @@ df <- df |>
         )
     )
 
-df |> count(ideology_simple)
+df |> count(ideology_simple, sort = TRUE)
 ```
 
 ### How many prosecutions were for violent vs. non-violent methods, by ideological affiliation?
+Then let's filter for only those to make our visualizations
 ```{r}
 #| message: false
 #| warning: false
@@ -102,6 +110,7 @@ df |>
     pivot_wider(names_from = method_type, values_from = n, values_fill = 0) |>
     select(ideology_simple, violent, `non-violent`) |>
     arrange(desc(violent))
+
 ```
 
 ## Prosections for violent crimes by ideological affiliation
@@ -109,8 +118,13 @@ df |>
 #| message: false
 #| warning: false
 
-violent_crimes_by_ideology <- df |> 
-    filter(method_type == "violent") |> 
+violent_crimes <- df |> 
+    filter(
+        method_type == "violent",
+        ideology_simple != "No affiliation/not a factor"
+        )
+    
+violent_crimes_by_ideology <- violent_crimes |> 
     count(ideology_simple, name = "violent_prosecutions") |> 
     arrange(desc(violent_prosecutions))
 
@@ -119,7 +133,7 @@ ggplot(violent_crimes_by_ideology, aes(x = reorder(ideology_simple, violent_pros
     geom_col(fill = "black", alpha = 0.8) +
     coord_flip() +
     labs(
-        title = "Prosecutions for Violent Crimes by Ideological Affiliation",
+        title = "Prosecutions for Violent Crimes",
         subtitle = "Based on The Prosecution Project Dataset",
         x = "Ideological Affiliation",
         y = "Number of Prosecutions for Violent Crimes",
@@ -140,20 +154,14 @@ ggplot(violent_crimes_by_ideology, aes(x = reorder(ideology_simple, violent_pros
 #| warning: false
 #| column: screen-inset
 
-# Extract year from the date column and create the data for the stacked bar chart
-df_yearly <- df |>
-    # Extract year from date (handling different date formats)
-    mutate(year = case_when(
-        str_detect(date, "/") ~ as.numeric(str_extract(date, "\\d{4}$")),
-        str_detect(date, "-") ~ as.numeric(str_extract(date, "^\\d{4}"))
-    )) |>
-    # Filter out any rows where year extraction failed
+df_yearly <- violent_crimes |>
+    mutate(
+        year = lubridate::year(date),
+        year = as.integer(year)
+    ) |>
     filter(!is.na(year)) |>
-    # Count prosecutions by year and ideology
     count(year, ideology_simple, name = "prosecutions")
 
-# Create a custom color palette that clearly distinguishes ideologies
-# Use a manual color scale with intuitive colors
 ggplot(df_yearly, aes(x = year, y = prosecutions, fill = ideology_simple)) +
     geom_col() +
     scale_fill_manual(values = c(
@@ -161,13 +169,12 @@ ggplot(df_yearly, aes(x = year, y = prosecutions, fill = ideology_simple)) +
         "Leftist" = "#337fb5ff",                     # Blue for Leftist  
         "Salafi/Jihadist/Islamist" = "#e08738ff",    # Orange
         "Unclear" = "#71a771ff",                     # Green
-        "No affiliation/not a factor" = "#999999ff", # Purple
         "Nationalist-separatist" = "#8c564b",      # Brown
         "Other" = "#e377c2"                        # Pink
     )) +
     labs(
-        title = "Total Prosecutions by Year, Colored by Ideological Affiliation",
-        subtitle = "Based on The Prosecution Project Dataset",
+        title = "Total Prosecutions of Violent Crimes by Year",
+        subtitle = "By Ideological Affiliation - Based on The Prosecution Project Dataset",
         x = "Year",
         y = "Number of Prosecutions",
         fill = "Ideological Affiliation",
@@ -186,6 +193,69 @@ ggplot(df_yearly, aes(x = year, y = prosecutions, fill = ideology_simple)) +
     guides(fill = guide_legend(ncol = 3)) +
     scale_x_continuous(breaks = scales::pretty_breaks(n = 8))
 ```
+
+```{r}
+#| message: false
+#| warning: false
+#| layout-ncol: 2
+#| fig-cap: 
+#|   - "All ideologies."
+#|   - "Excluding Salafi/Jihadist/Islamist."
+#| column: screen-inset
+
+df_deaths <- violent_crimes |>
+   group_by(ideology_simple) |> 
+   summarise(total_deaths = sum(number_killed, na.rm = TRUE)) |> 
+   arrange(desc(total_deaths))
+
+plot1 <- ggplot(df_deaths, aes(x = reorder(ideology_simple, total_deaths), 
+                                       y = total_deaths)) +
+    geom_col(fill = "black", alpha = 0.8) +
+    coord_flip() +
+    labs(
+        title = "Total Deaths from Violent Crimes",
+        subtitle = "Based on The Prosecution Project Dataset",
+        x = "Ideological Affiliation",
+        y = "Total Deaths from Violent Crimes",
+        caption = "Source: The Prosecution Project, 2023"
+    ) +
+    theme_minimal() +
+    theme(
+        plot.title = element_text(size = 14, face = "bold"),
+        plot.subtitle = element_text(size = 12),
+        axis.text = element_text(size = 10),
+        axis.title = element_text(size = 11)
+    )
+
+# exclude salafi/jihadist/islamist
+plot2 <- violent_crimes |>
+   filter(ideology_simple != "Salafi/Jihadist/Islamist") |>
+   group_by(ideology_simple) |> 
+   summarise(total_deaths = sum(number_killed, na.rm = TRUE)) |> 
+   arrange(desc(total_deaths)) |> 
+   ungroup() |> 
+   ggplot(aes(x = reorder(ideology_simple, total_deaths), y = total_deaths)) +
+       geom_col(fill = "black", alpha = 0.8) +
+       coord_flip() +
+       labs(
+           title = "Total Deaths from Violent Crimes",
+           subtitle = "Excluding Salafi/Jihadist/Islamist",
+           x = "Ideological Affiliation",
+           y = "Total Deaths from Violent Crimes",
+           caption = "Source: The Prosecution Project, 2023"
+       ) +
+       theme_minimal() +
+       theme(
+           plot.title = element_text(size = 14, face = "bold"),
+           plot.subtitle = element_text(size = 12),
+           axis.text = element_text(size = 10),
+           axis.title = element_text(size = 11)
+       )
+plot1
+plot2
+
+```
+
 
 ## References
 
