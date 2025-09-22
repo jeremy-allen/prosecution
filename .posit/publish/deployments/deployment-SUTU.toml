@@ -11,14 +11,16 @@ id = '01995347-b373-b112-1a66-b7d742de80da'
 dashboard_url = 'https://connect.posit.cloud/jeremyallen/content/01995347-b373-b112-1a66-b7d742de80da'
 direct_url = 'https://01995347-b373-b112-1a66-b7d742de80da.share.connect.posit.cloud'
 logs_url = 'https://connect.posit.cloud/jeremyallen/content/01995347-b373-b112-1a66-b7d742de80da/history'
-deployed_at = '2025-09-18T08:17:50-04:00'
-bundle_id = '01995cc2-6ad0-a670-bab1-fe022818fa74'
+deployed_at = '2025-09-22T10:14:48-04:00'
+bundle_id = '019971c6-f17b-f139-3226-899e600b2e9d'
 files = [
   '.posit/publish/Political Violence in the Unit-JBLI.toml',
   '.posit/publish/deployments/deployment-SUTU.toml',
   'violence.html',
   'violence_files/figure-html/unnamed-chunk-10-1.png',
   'violence_files/figure-html/unnamed-chunk-10-2.png',
+  'violence_files/figure-html/unnamed-chunk-11-1.png',
+  'violence_files/figure-html/unnamed-chunk-11-2.png',
   'violence_files/figure-html/unnamed-chunk-7-1.png',
   'violence_files/figure-html/unnamed-chunk-8-1.png',
   'violence_files/figure-html/unnamed-chunk-9-1.png',
