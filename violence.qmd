@@ -20,7 +20,7 @@ suppressPackageStartupMessages({
 
 ## Prepare the data
 
-Import the data, clean the column names, and filter for only the US.
+Import the data, clean the column names, and remove pending cases and cases without clear guilty verdict, filter for only the US.
 ```{r}
 #| message: false
 #| warning: false
@@ -37,9 +37,19 @@ df <- df |>
     )
   )
 
+no_clear_guilt <- c("Charged but not tried", "Data not available", "Not guilty", "Hung jury/mistrial", "Pending")
+num_no_clear_guilt <- df |> 
+    filter(verdict %in% no_clear_guilt) |> 
+    nrow()
+
+df <- df |> 
+    filter(!verdict %in% no_clear_guilt)
+
 df <- df |> 
     filter(location_country == "United States")
 ```
+
+There were *`r num_no_clear_guilt`* cases without a clear guilty verdict that were removed from the analysis.
 
 How many cases are not linked or motivated politically?
 ```{r}
@@ -52,7 +62,7 @@ cases_not_political <- df |>
     nrow()
 ```
 
-There are *`r cases_not_political`* cases not politically motivated out of a total of *`r total_cases` cases*, which is *`r round((cases_not_political / total_cases) * 100, 2)`%*. So, we will exclude the non-politically motivated cases from our analysis.
+There were *`r cases_not_political`* cases not politically motivated out of a total of *`r total_cases` cases*, which is *`r round((cases_not_political / total_cases) * 100, 2)`%*. So, we will exclude the non-politically motivated cases going forward.
 
 ```{r}
 #| message: false
@@ -243,10 +253,33 @@ ggplot(df_yearly, aes(x = year, y = prosecutions, fill = ideology_simple)) +
 #| message: false
 #| warning: false
 
+# Don't double count deaths in case where more than one person is tried for the same incident
 df_deaths <- violent_crimes |>
-   group_by(ideology_simple) |> 
-   summarise(total_deaths = sum(number_killed, na.rm = TRUE)) |> 
-   arrange(desc(total_deaths))
+  mutate(
+    # Extract the incident date from Case ID (first part before underscore)  
+    incident_date = str_extract(case_id, "^[^_]+"),
+    # Parse the date correctly
+    incident_date_formatted = case_when(
+      str_length(incident_date) == 8 & str_detect(incident_date, "^\\d{8}$") ~ 
+        paste0(str_sub(incident_date, 1, 2), "/", 
+               str_sub(incident_date, 3, 4), "/", 
+               str_sub(incident_date, 5, 8)),
+      TRUE ~ incident_date
+    )
+  ) |>
+  group_by(incident_date, incident_date_formatted) |>
+  summarise(
+    unique_incidents = 1,  
+    related_cases = n(),   
+    total_individuals = n_distinct(full_legal_name), 
+    total_deaths = first(number_killed, na_rm = TRUE),  
+    case_names = paste(unique(name_of_case), collapse = "; "),
+    ideology_simple = first(ideology_simple, na_rm = TRUE),
+    .groups = "drop"
+  ) |>
+  group_by(ideology_simple) |> 
+  summarise(total_deaths = sum(total_deaths, na.rm = TRUE)) |> 
+  arrange(desc(total_deaths))
 
 plot1 <- ggplot(df_deaths, aes(x = reorder(ideology_simple, total_deaths), 
                                        y = total_deaths)) +
