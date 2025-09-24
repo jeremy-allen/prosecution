@@ -4,15 +4,28 @@ format: html
 code-fold: true
 ---
 
-# Political violence in the US: *"The problem is on the left"*
+# Political violence in the US
 
-I examine the number of prosecutions and deaths from violent crimes in the United States. Not all violent crimes, just violent crimes that have an ideological motivation and guilty verdict. I use data from The Prosecution Project Dataset (Loadenthal et al. 2023).
+I examine the number of prosecutions and deaths from violent crimes in the United States. Not all
+violent crimes, just violent crimes that have an ideological motivation and guilty verdict. I use
+data[^1] from [The Prosecution Project
+Dataset](https://theprosecutionproject.org/overview-project-description/) (Loadenthal et al. 2023).
 
-After Charlie Kirk was assassinated in September, the US president, Donald Trump, and Elon Musk said the left is the real problem (Suter 2025; Hutzler and Stoddart 2025). They struggle with numbers, so this report looks at reliable numbers. The left,  right, and others commit violence. However, the lopsided swell of violence from the right is obvious for any observer interested in knowledge more than inflammatory politics.
+[^1]: See [The Prosecution Project's FAQ](https://theprosecutionproject.org/faq/) where they discuss what data is included, excluded, and why.
+    For example, their data is likely an undercount of violence because they compile their data only
+    from prosecutions. So, if there were a violent incident and the perpetrator were killed onsite,
+    there would be no prosecution and no data point in this set.
+
+After Charlie Kirk was assassinated in September, the US president, Donald Trump, and Elon Musk said
+the left is the real problem (Suter 2025; Hutzler and Stoddart 2025). They struggle with numbers, so
+this report looks at reliable numbers. The left, right, and others commit violence. However, the
+lopsided swell of violence from the right is obvious for any observer interested in knowledge more
+than inflammatory politics.
 
 ## Prepare the data
 
-Import the data, clean the column names, and remove pending cases and cases without clear guilty verdict, filter for only the US.
+Import the data, clean the column names, and remove pending cases and cases without clear guilty
+verdict, filter for only the US.
 
 ```{r}
 #| message: false
@@ -53,9 +66,11 @@ df <- df |>
     filter(location_country == "United States")
 ```
 
-There are **`r num_no_clear_guilt`** cases without a clear guilty verdict that I remove from the analysis.
+There are **`r num_no_clear_guilt`** cases without a clear guilty verdict that I remove from the
+analysis.
 
 How many cases are not linked or motivated politically?
+
 ```{r}
 #| message: false
 #| warning: false
@@ -66,7 +81,9 @@ cases_not_political <- df |>
     nrow()
 ```
 
-There are **`r cases_not_political`** cases not politically motivated out of a total of **`r total_cases` cases**, which is **`r round((cases_not_political / total_cases) * 100, 2)`%**. So, I exclude these non-politically motivated cases going forward.
+There are **`r cases_not_political`** cases not politically motivated out of a total of
+**`r total_cases` cases**, which is **`r round((cases_not_political / total_cases) * 100, 2)`%**.
+So, I exclude these non-politically motivated cases going forward.
 
 ```{r}
 #| message: false
@@ -86,6 +103,7 @@ df <- df |>
 ```
 
 Which dates are represented in the data?
+
 ```{r}
 #| message: false
 #| warning: true
@@ -106,6 +124,7 @@ df |>
 ```
 
 ### Which ideological affiliations are represented in the data?
+
 ```{r}
 #| message: false
 #| warning: false
@@ -118,7 +137,10 @@ df |>
 ```
 
 ### Simplify ideologies
-Because there are multiple leftist categories and multiple rightist categories, lets add a column that consolidates leftist types and rightest types.
+
+Because there are multiple leftist categories and multiple rightist categories, lets add a column
+that consolidates leftist types and rightest types.
+
 ```{r}
 #| message: false
 #| warning: false
@@ -142,7 +164,9 @@ df |>
 # Focus on Violence
 
 ### How many prosecutions were for violent vs. non-violent methods, by ideological affiliation?
+
 Then let's filter for only those to make our visualizations.
+
 ```{r}
 #| message: false
 #| warning: false
@@ -181,6 +205,7 @@ df |>
 ```
 
 ## Prosecutions for violent crimes in the US by ideological affiliation
+
 ```{r}
 #| message: false
 #| warning: false
@@ -217,6 +242,7 @@ ggplot(violent_crimes_by_ideology, aes(x = reorder(ideology_simple, violent_pros
 ```
 
 ## Prosecutions for violent crimes in the US by ideological affiliation by year
+
 ```{r}
 #| message: false
 #| warning: false
@@ -323,17 +349,35 @@ plot1
 
 ## The new rise of leftist violence
 
-Historically, right-wing attacks have been more frequent and far more lethal, though they have seen a sharp decline following Donald Trump's reelection. If we narrow our scope to look at just terrorist attacks, 2025 will be the first year in three decades to see more leftist terrorist attacks in the US than those from the right. This trend follows a pattern where the political party out of power experiences a rise in extremist violence from its fringes (Byman and McCabe 2025). Byman and McCabe do not use the The Prosecution Project data I used, but compiled their own data covering 750 attacks and plots in the United States from January 1, 1994, to July 4, 2025.  Read [their report in the Atlantic.](https://www.theatlantic.com/politics/archive/2025/09/charlie-kirk-left-wing-terrorism/684323/)
+Historically, right-wing attacks have been more frequent and far more lethal, though they have seen
+a sharp decline following Donald Trump's reelection. If we narrow our scope to look at just
+terrorist attacks, 2025 will be the first year in three decades to see more leftist terrorist
+attacks in the US than those from the right. This trend follows a pattern where the political party
+out of power experiences a rise in extremist violence from its fringes (Byman and McCabe 2025).
+Byman and McCabe do not use the The Prosecution Project data I used, but compiled their own data
+covering 750 attacks and plots in the United States from January 1, 1994, to July 4, 2025. Read
+[their report in the
+Atlantic.](https://www.theatlantic.com/politics/archive/2025/09/charlie-kirk-left-wing-terrorism/684323/)
 
 ## References
 
-Byman, Daniel, and Riley McCabe. 2025. “Left-Wing Terrorism Is on the Rise.” Politics. The Atlantic, September 23. https://www.theatlantic.com/politics/archive/2025/09/charlie-kirk-left-wing-terrorism/684323/.
+Byman, Daniel, and Riley McCabe. 2025. “Left-Wing Terrorism Is on the Rise.” Politics. The Atlantic,
+September 23.
+https://www.theatlantic.com/politics/archive/2025/09/charlie-kirk-left-wing-terrorism/684323/.
 
-Hutzler, Alexandra, and Michelle Stoddart. 2025. “Trump Doubles down on Blaming ‘radical Left’ after Vow to Go after Political Violence.” ABC News, September 12. https://abcnews.go.com/Politics/trump-doubles-blaming-radical-left-after-vow-after/story?id=125509965.
+Hutzler, Alexandra, and Michelle Stoddart. 2025. “Trump Doubles down on Blaming ‘radical Left’ after
+Vow to Go after Political Violence.” ABC News, September 12.
+https://abcnews.go.com/Politics/trump-doubles-blaming-radical-left-after-vow-after/story?id=125509965.
 
-Loadenthal, Michael, Lauren Donahoe, Madison Weaver, Sara Godfrey, Kathryn Blowers, et. al. 2023. “The Prosecution Project Dataset,” the Prosecution Project, 2023 [dataset]. https://theprosecutionproject.org/
+Loadenthal, Michael, Lauren Donahoe, Madison Weaver, Sara Godfrey, Kathryn Blowers, et. al. 2023.
+“The Prosecution Project Dataset,” the Prosecution Project, 2023 \[dataset\].
+https://theprosecutionproject.org/
 
-Suter, Tara. 2025. “Elon Musk: ‘The Left Is the Party of Murder.’” Text. The Hill, September 14. https://thehill.com/policy/technology/5502535-elon-musk-charlie-kirk-death/.
+Suter, Tara. 2025. “Elon Musk: ‘The Left Is the Party of Murder.’” Text. The Hill, September 14.
+https://thehill.com/policy/technology/5502535-elon-musk-charlie-kirk-death/.
 
 ## Code
-This descriptive analysis was created by Jeremy Allen using R, tidyverse, janitor, and RColorBrewer packages. The report is built with Quarto. The code is available on [GitHub](https://github.com/jeremy-allen/prosecution.git).
+
+This descriptive analysis was created by Jeremy Allen using R, tidyverse, janitor, and RColorBrewer
+packages. The report is built with Quarto. The code is available on
+[GitHub](https://github.com/jeremy-allen/prosecution.git).
