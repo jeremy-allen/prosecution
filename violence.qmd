@@ -6,10 +6,10 @@ code-fold: true
 
 # Political violence in the US
 
-I examine the number of prosecutions and deaths from violent crimes in the United States. Not all
+I examine the number of people prosecuted and number of deaths from violent crimes in the United States. Not all
 violent crimes, just violent crimes that have an ideological motivation and guilty verdict. I use
 data[^1] from [The Prosecution Project
-Dataset](https://theprosecutionproject.org/overview-project-description/) (Loadenthal et al. 2023).
+Dataset](https://theprosecutionproject.org/overview-project-description/) (Loadenthal et al. 2023). In this data, each row is a defendant in a case.
 
 [^1]: See [The Prosecution Project's FAQ](https://theprosecutionproject.org/faq/) where they discuss what data is included, excluded, and why.
     For example, their data is likely an undercount of violence because they compile their data only
@@ -25,7 +25,7 @@ than inflammatory politics.
 ## Prepare the data
 
 Import the data, clean the column names, and remove pending cases and cases without clear guilty
-verdict, filter for only the US.
+verdict, and filter for only the US.
 
 ```{r}
 #| message: false
@@ -44,7 +44,7 @@ suppressPackageStartupMessages({
 df <- read_csv("data/tpp-2025-09-15-general.csv") |> 
     clean_names()
 
-# fix the mix of numeric and character in the # killed coloumn
+# fix the mix of numeric and character in the # killed column
 df <- df |> 
     mutate(
     number_killed = case_when(
@@ -66,30 +66,30 @@ df <- df |>
     filter(location_country == "United States")
 ```
 
-There are **`r num_no_clear_guilt`** cases without a clear guilty verdict that I remove from the
+There are **`r num_no_clear_guilt`** defendants without a clear guilty verdict that I remove from the
 analysis.
 
-How many cases are not linked or motivated politically?
+How many defendants are not linked or motivated politically?
 
 ```{r}
 #| message: false
 #| warning: false
-total_cases <- nrow(df)
+total_defendants <- nrow(df)
 
-cases_not_political <- df |>
+defendants_not_political <- df |>
     filter(criminal_method == "Criminal violation not linked or motivated politically") |> 
     nrow()
 ```
 
-There are **`r cases_not_political`** cases not politically motivated out of a total of
-**`r total_cases` cases**, which is **`r round((cases_not_political / total_cases) * 100, 2)`%**.
-So, I exclude these non-politically motivated cases going forward.
+There are **`r defendants_not_political`** defendants not politically motivated out of a total of
+**`r total_defendants` defendants**, which is **`r round((defendants_not_political / total_defendants) * 100, 2)`%**.
+So, I exclude these non-politically motivated defendants going forward.
 
 ```{r}
 #| message: false
 #| warning: false
 
-# remove cases not politically motivated or unknown
+# remove defendants not politically motivated or unknown
 df <- df |>
     filter(!criminal_method %in% c("Unknown/unspecified/undeveloped", "Criminal violation not linked or motivated politically"))
 
@@ -98,8 +98,34 @@ df <- df |>
     mutate(
         date = str_trim(date),
         date = lubridate::mdy(date)
+    ) 
+
+```
+
+Were all of these crimes fully carried through?
+
+```{r}
+#| message: false
+#| warning: false
+df |> 
+    count(completion_of_crime) |> 
+    knitr::kable(
+        col.names = c("Case Outcome", "Number of Prosecutions"),
+        caption = "Table 1: Case Outcomes"
     )
 
+num_threats_and_unknown <- df |> 
+    filter(completion_of_crime %in% c("Threat", "Unknown")) |> 
+    nrow()
+```
+
+I am more interested in harm that was attempted, planned, or occurred, so I will filter out the others (`r num_threats_and_unknown` defendants). That leaves us with **`r nrow(df) - num_threats_and_unknown` defendants.**
+
+```{r}
+#| message: false
+#| warning: false
+df <- df |> 
+    filter(!completion_of_crime %in% c("Threat", "Unknown"))
 ```
 
 Which dates are represented in the data?
@@ -120,7 +146,7 @@ df |>
         `Earliest Date` = min(date, na.rm = TRUE),
         `Latest Date` = max(date, na.rm = TRUE)
     ) |> 
-    knitr::kable(caption = "Table 1: Date Range of the Data")
+    knitr::kable(caption = "Table 2: Date Range of the Data")
 ```
 
 ### Which ideological affiliations are represented in the data?
@@ -132,14 +158,14 @@ df |>
     count(ideological_affiliation) |> 
     knitr::kable(
         col.names = c("Ideological Affiliation", "Number of Prosecutions"),
-        caption = "Table 2: Number of Prosecutions by Ideological Affiliation"
+        caption = "Table 3: Number of Prosecutions by Ideological Affiliation"
     )
 ```
 
 ### Simplify ideologies
 
-Because there are multiple leftist categories and multiple rightist categories, lets add a column
-that consolidates leftist types and rightest types.
+Because there are multiple leftist categories and multiple rightist categories, I add a column
+that consolidates leftist types and rightest types. This hides important variation **within** ideologies but allows to more easily asses political statements about left vs. right violence.
 
 ```{r}
 #| message: false
@@ -157,15 +183,15 @@ df |>
     count(ideology_simple, sort = TRUE) |> 
     knitr::kable(
         col.names = c("Ideological Affiliation", "Number of Prosecutions"),
-        caption = "Table 3: Number of Prosecutions by Simplified Ideological Affiliation"
+        caption = "Table 4: Number of Prosecutions by Simplified Ideological Affiliation"
     )
 ```
 
 # Focus on Violence
 
-### How many prosecutions were for violent vs. non-violent methods, by ideological affiliation?
+### How many defendants were used violent vs. non-violent methods, by ideological affiliation?
 
-Then let's filter for only those to make our visualizations.
+Then I filter for only those to make our visualizations.
 
 ```{r}
 #| message: false
@@ -199,12 +225,12 @@ df |>
     arrange(desc(violent)) |> 
     knitr::kable(
         col.names = c("Ideological Affiliation", "Violent Prosecutions", "Non-Violent Prosecutions"),
-        caption = "Table 4: Number of Violent vs. Non-Violent Prosecutions by Ideological Affiliation"
+        caption = "Table 5: Number of Violent vs. Non-Violent Prosecutions by Ideological Affiliation"
     )
 
 ```
 
-## Prosecutions for violent crimes in the US by ideological affiliation
+## Defendants prosecuted for violent crimes in the US by ideological affiliation
 
 ```{r}
 #| message: false
@@ -226,10 +252,10 @@ ggplot(violent_crimes_by_ideology, aes(x = reorder(ideology_simple, violent_pros
     geom_col(fill = "black", alpha = 0.8) +
     coord_flip() +
     labs(
-        title = "Prosecutions for Violent Crimes in the US",
+        title = "Defendants Prosecuted for Violent Crimes in the US",
         subtitle = "By Ideological Affiliation of the Perpetrator",
-        x = "Ideological Affiliation",
-        y = "Number of Prosecutions for Violent Crimes",
+        x = "Their Ideology",
+        y = "Number of Defendants",
         caption = "Source: The Prosecution Project"
     ) +
     theme_minimal() +
@@ -241,7 +267,7 @@ ggplot(violent_crimes_by_ideology, aes(x = reorder(ideology_simple, violent_pros
     )
 ```
 
-## Prosecutions for violent crimes in the US by ideological affiliation by year
+## Defendants prosecuted for violent crimes in the US by ideological affiliation by year
 
 ```{r}
 #| message: false
@@ -269,11 +295,11 @@ ggplot(df_yearly, aes(x = year, y = prosecutions, fill = ideology_simple)) +
     )) +
     scale_x_continuous(breaks = scales::pretty_breaks(n = 8)) +
     labs(
-        title = "Total Prosecutions of Violent Crimes in the US by Year",
+        title = "Defendants Prosecuted for Violent Crimes in the US by Year",
         subtitle = "By Ideological Affiliation of the Perpetrator",
         x = "Year",
-        y = "Number of Prosecutions",
-        fill = "Perpetrator Ideology",
+        y = "Number of Defendants",
+        fill = "Their Ideology",
         caption = "Source: The Prosecution Project"
     ) +
     guides(fill = guide_legend(ncol = 6)) +
@@ -296,7 +322,7 @@ ggplot(df_yearly, aes(x = year, y = prosecutions, fill = ideology_simple)) +
 #| warning: false
 #| fig-width: 11
 
-# Don't double count deaths in cases where more than one person is tried for the same incident
+# Don't double count deaths in cases where more than one defendant is tried for the same case
 df_deaths <- violent_crimes |>
   mutate(
     # Extract the incident date from Case ID (first part before underscore)  
@@ -347,23 +373,8 @@ plot1
 
 ```
 
-## The new rise of leftist violence
-
-Historically, right-wing attacks have been more frequent and far more lethal, though they have seen
-a sharp decline following Donald Trump's reelection. If we narrow our scope to look at just
-terrorist attacks, 2025 will be the first year in three decades to see more leftist terrorist
-attacks in the US than those from the right. This trend follows a pattern where the political party
-out of power experiences a rise in extremist violence from its fringes (Byman and McCabe 2025).
-Byman and McCabe do not use the The Prosecution Project data I used, but compiled their own data
-covering 750 attacks and plots in the United States from January 1, 1994, to July 4, 2025. Read
-[their report in the
-Atlantic.](https://www.theatlantic.com/politics/archive/2025/09/charlie-kirk-left-wing-terrorism/684323/)
 
 ## References
-
-Byman, Daniel, and Riley McCabe. 2025. “Left-Wing Terrorism Is on the Rise.” Politics. The Atlantic,
-September 23.
-https://www.theatlantic.com/politics/archive/2025/09/charlie-kirk-left-wing-terrorism/684323/.
 
 Hutzler, Alexandra, and Michelle Stoddart. 2025. “Trump Doubles down on Blaming ‘radical Left’ after
 Vow to Go after Political Violence.” ABC News, September 12.
