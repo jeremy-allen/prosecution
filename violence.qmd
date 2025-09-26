@@ -69,6 +69,24 @@ df <- df |>
 There are **`r num_no_clear_guilt`** defendants without a clear guilty verdict that I remove from the
 analysis.
 
+Are any defendants duplicated for the same charge? For example, being in the data on two different dates as part of the same case? 
+
+```{r}
+#| message: false
+#| warning: false
+
+duplicates <- df |> 
+    group_by(full_legal_name, name_of_case) |> 
+    filter(n() > 1) |> 
+    ungroup()
+
+df <- df |> 
+    filter(!case_id %in% c("09262001_PMC", "02142024_KC"))
+
+```
+
+There are two cases where the defendants are in the data twice for the same charge, once for their indictment and once for a second part of their trial, on different dates. I remove two rows to avoid double counting these two defendants. This leaves us with **`r nrow(df)`** defendants. Four others are duplicates but for different charges, so I keep them.
+
 How many defendants are not linked or motivated politically?
 
 ```{r}
