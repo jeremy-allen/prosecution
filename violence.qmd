@@ -427,7 +427,7 @@ ggplot() +
     geom_vline(data = presidents, aes(xintercept = year), 
                color = "black", linetype = "dashed", alpha = 0.7) +
     geom_text(data = presidents, aes(x = year, y = 70, label = president), 
-              vjust = -1.2, hjust = 0, angle = 90, size = 3, color = "black") +
+              vjust = 1.5, hjust = 0, angle = 90, size = 3, color = "black") +
     geom_col(data = df_yearly, aes(x = year, y = prosecutions, fill = ideology_simple)) +
     scale_fill_manual(values = c(
         "Rightist" = "#c14a58ff",                    # Red for Rightist
@@ -463,9 +463,9 @@ ggplot() +
 
 ## Deaths
 
-The data is structured according to legal cases. A single defendant can be tried in multiple jurisdictions for the same incident. For example, a shooter can appear in a federal indictment and a state indictment for the same shooting. These would be two rows in the data. If we simply added the number of killed, we would overcount. 
+The data is structured by prosecution. A single defendant can be prosecuted in multiple jurisdictions for the same incident. For example, a shooter can appear in a federal indictment and a state indictment for the same shooting. If I am not careful I could overcount deaths from these crimes. 
 
-How often does this happen? How much would we overcount if we simply summed the number killed?
+How often does this happen? How much would we overcount if we simply summed the number killed from all rows in the data?
 ```{r}
 # were any individuals charged at multiple jurisdictional levels?
 dupes <- violent_crimes |>
@@ -503,9 +503,10 @@ dupes |>
         caption = "Table 6: Defendants Charged at Multiple Jurisdictional Levels"
     )
 ```
-There are **`r nrow(dupes)`** defendants who were charged at multiple jurisdictional levels. If we simply summed the number killed, we would count **`r sum(dupe_counts$total_killed_if_summed, na.rm = TRUE)`** deaths instead of the actual **`r sum(dupe_counts$actual_killed, na.rm = TRUE)`** deaths. This would be  an overcount of **`r sum(dupe_counts$total_killed_if_summed, na.rm = TRUE) - sum(dupe_counts$actual_killed, na.rm = TRUE)`** deaths. So, I won't count duplicates.
 
-Now, let's look at the number of deaths by ideological affiliation, avoiding double counting.
+Out of our **`r nrow(violent_crimes)`** violent crime prosecutions, there are **`r nrow(dupes)`** defendants who were charged at multiple jurisdiction levels. If I simply summed the number killed from every row, I would mistakenly double count some deaths.  For these 11 defendants, I would get **`r sum(dupe_counts$total_killed_if_summed, na.rm = TRUE)`** deaths instead of the actual **`r sum(dupe_counts$actual_killed, na.rm = TRUE)`** deaths. This would be  an overcount of **`r sum(dupe_counts$total_killed_if_summed, na.rm = TRUE) - sum(dupe_counts$actual_killed, na.rm = TRUE)`** deaths.
+
+Now, let's look at the number of deaths by ideological affiliation, and avoid double counting from cases where a defendant was prosecuted twice.
 
 ```{r}
 #| message: false
