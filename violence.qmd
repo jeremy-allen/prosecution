@@ -495,6 +495,8 @@ dupes |>
 ```
 There are **`r nrow(dupes)`** defendants who were charged at multiple jurisdictional levels. If we simply summed the number killed, we would count **`r sum(dupe_counts$total_killed_if_summed, na.rm = TRUE)`** deaths instead of the actual **`r sum(dupe_counts$actual_killed, na.rm = TRUE)`** deaths. This would be  an overcount of **`r sum(dupe_counts$total_killed_if_summed, na.rm = TRUE) - sum(dupe_counts$actual_killed, na.rm = TRUE)`** deaths. So, I won't count duplicates.
 
+Now, let's look at the number of deaths by ideological affiliation, avoiding double counting.
+
 ```{r}
 #| message: false
 #| warning: false
@@ -533,7 +535,7 @@ plot1 <- ggplot(df_deaths, aes(x = reorder(ideology_simple, total_deaths),
     geom_col(fill = "black", alpha = 0.8) +
     coord_flip() +
     labs(
-        title = "Who Causes More Death by Violent Crime in the US?",
+        title = "Deaths Reported in Prosecutions in the US",
         subtitle = "By Ideological Affiliation of the Perpetrator",
         x = "Perpetrator Ideology",
         y = "Deaths",
