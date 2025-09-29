@@ -453,6 +453,48 @@ ggplot(df_yearly, aes(x = year, y = prosecutions, fill = ideology_simple)) +
 
 ## Deaths
 
+The data is structured according to legal cases. A single defendant can be tried in multiple jurisdictions for the same incident. For example, a shooter can appear in a federal indictment and a state indictment for the same shooting. These would be two rows in the data. If we simply added the number of killed, we would overcount. 
+
+How often does this happen? How much would we overcount if we simply summed the number killed?
+```{r}
+# were any individuals charged at multiple jurisdictional levels?
+dupes <- violent_crimes |>
+  group_by(full_legal_name) |>
+  arrange(date) |>
+  summarize(
+    n_jurisdiction_levels = n_distinct(jurisdiction_level),
+    jurisdictions = str_c(jurisdiction_level, collapse = "; "),
+    case_ids = str_c(case_id, collapse = "; "),
+    date_types = str_c(date_descriptor, collapse = "; "),
+    state_locations = str_c(location_state, collapse = "; "),
+    n_killed_each = str_c(number_killed, collapse = "; "),
+    ideology = str_c(ideology_simple, collapse = "; ")
+  ) |>
+  filter(n_jurisdiction_levels > 1) |>
+  arrange((full_legal_name)) |>
+  select(-n_jurisdiction_levels)
+
+# how much overcount?
+# extract digits from n_killed_each column where there are multiple numbers that are the same
+dupe_counts <- dupes |>
+  mutate(
+    n_killed_each_list = str_extract_all(n_killed_each, "\\d+"),
+    n_killed_each_list = map(n_killed_each_list, as.integer),
+    total_killed_if_summed = map_int(n_killed_each_list, sum),
+    are_equal = map_lgl(n_killed_each_list, ~ length(unique(.x)) == 1)
+  ) |>
+  filter(are_equal) |>  # just the ones where the numbers are the same
+  mutate(actual_killed = map_int(n_killed_each_list, ~ ifelse(length(.x) > 0, .x[1], 0))) |>
+  select(-n_killed_each_list, -are_equal)
+
+dupes |> 
+    knitr::kable(
+        col.names = c("Defendant Name", "Jurisdictions", "Case IDs", "Date Types", "States", "# Killed Each", "Ideology"),
+        caption = "Table 6: Defendants Charged at Multiple Jurisdictional Levels"
+    )
+```
+There are **`r nrow(dupes)`** defendants who were charged at multiple jurisdictional levels. If we simply summed the number killed, we would count **`r sum(dupe_counts$total_killed_if_summed, na.rm = TRUE)`** deaths instead of the actual **`r sum(dupe_counts$actual_killed, na.rm = TRUE)`** deaths. This would be  an overcount of **`r sum(dupe_counts$total_killed_if_summed, na.rm = TRUE) - sum(dupe_counts$actual_killed, na.rm = TRUE)`** deaths. So, I won't count duplicates.
+
 ```{r}
 #| message: false
 #| warning: false
