@@ -563,7 +563,140 @@ plot1 <- ggplot(df_deaths, aes(x = reorder(ideology_simple, total_deaths),
 plot1
 
 ```
+## Notable Trends
 
+```{r}
+#| message: false
+#| warning: false
+
+# just leftist
+yearly_left <- df_yearly |> 
+    filter(ideology_simple == "Leftist")
+
+ggplot() +
+    geom_vline(data = presidents, aes(xintercept = year), 
+               color = "black", linetype = "dashed", alpha = 0.7) +
+    geom_text(data = presidents, aes(x = year, y = 7, label = president), 
+              vjust = 1.5, hjust = 0, angle = 90, size = 3, color = "black") +
+    geom_col(data = yearly_left, aes(x = year, y = prosecutions, fill = ideology_simple)) +
+    scale_fill_manual(values = c(
+        "Rightist" = "#c14a58ff",                    # Red for Rightist
+        "Leftist" = "#337fb5ff",                     # Blue for Leftist  
+        "Salafi/Jihadist/Islamist" = "#e08738ff",    # Orange
+        "Unclear" = "#71a771ff",                     # Green
+        "Nationalist-separatist" = "#8c564b",      # Brown
+        "Other" = "#e377c2"                        # Pink
+    )) +
+    scale_x_continuous(breaks = scales::pretty_breaks(n = 8)) +
+    labs(
+        title = "Leftist Defendants Prosecuted for Violent Crimes in the US by Year",
+        subtitle = "",
+        x = "Year",
+        y = "Number of Defendants",
+        fill = "Their Ideology",
+        caption = "Source: The Prosecution Project"
+    ) +
+    guides(fill = guide_legend(ncol = 6)) +
+    theme_minimal() +
+    theme(
+        plot.title = element_text(size = 14, face = "bold"),
+        plot.subtitle = element_text(size = 12),
+        axis.text = element_text(size = 10),
+        axis.title = element_text(size = 11),
+        panel.grid.minor = element_blank(),
+        legend.position = "bottom",
+        legend.title = element_text(size = 10),
+        legend.text = element_text(size = 9)
+    )  
+
+```
+
+```{r}
+#| message: false
+#| warning: false
+
+# just leftist
+yearly_right <- df_yearly |> 
+    filter(ideology_simple == "Rightist")
+
+ggplot() +
+    geom_vline(data = presidents, aes(xintercept = year), 
+               color = "black", linetype = "dashed", alpha = 0.7) +
+    geom_text(data = presidents, aes(x = year, y = 50, label = president), 
+              vjust = 1.5, hjust = 0, angle = 90, size = 3, color = "black") +
+    geom_col(data = yearly_right, aes(x = year, y = prosecutions, fill = ideology_simple)) +
+    scale_fill_manual(values = c(
+        "Rightist" = "#c14a58ff",                    # Red for Rightist
+        "Leftist" = "#337fb5ff",                     # Blue for Leftist  
+        "Salafi/Jihadist/Islamist" = "#e08738ff",    # Orange
+        "Unclear" = "#71a771ff",                     # Green
+        "Nationalist-separatist" = "#8c564b",      # Brown
+        "Other" = "#e377c2"                        # Pink
+    )) +
+    scale_x_continuous(breaks = scales::pretty_breaks(n = 8)) +
+    labs(
+        title = "Rightist Defendants Prosecuted for Violent Crimes in the US by Year",
+        subtitle = "",
+        x = "Year",
+        y = "Number of Defendants",
+        fill = "Their Ideology",
+        caption = "Source: The Prosecution Project"
+    ) +
+    guides(fill = guide_legend(ncol = 6)) +
+    theme_minimal() +
+    theme(
+        plot.title = element_text(size = 14, face = "bold"),
+        plot.subtitle = element_text(size = 12),
+        axis.text = element_text(size = 10),
+        axis.title = element_text(size = 11),
+        panel.grid.minor = element_blank(),
+        legend.position = "bottom",
+        legend.title = element_text(size = 10),
+        legend.text = element_text(size = 9)
+    )  
+```
+
+```{r}
+# just leftist
+yearly_unclear <- df_yearly |> 
+    filter(ideology_simple == "Unclear")
+
+ggplot() +
+    geom_vline(data = presidents, aes(xintercept = year), 
+               color = "black", linetype = "dashed", alpha = 0.7) +
+    geom_text(data = presidents, aes(x = year, y = 8, label = president), 
+              vjust = 1.5, hjust = 0, angle = 90, size = 3, color = "black") +
+    geom_col(data = yearly_unclear, aes(x = year, y = prosecutions, fill = ideology_simple)) +
+    scale_fill_manual(values = c(
+        "Rightist" = "#c14a58ff",                    # Red for Rightist
+        "Leftist" = "#337fb5ff",                     # Blue for Leftist  
+        "Salafi/Jihadist/Islamist" = "#e08738ff",    # Orange
+        "Unclear" = "#71a771ff",                     # Green
+        "Nationalist-separatist" = "#8c564b",      # Brown
+        "Other" = "#e377c2"                        # Pink
+    )) +
+    scale_x_continuous(breaks = scales::pretty_breaks(n = 8)) +
+    labs(
+        title = "Defendants Prosecuted for Violent Crimes in the US by Year",
+        subtitle = "Whose ideology is unclear",
+        x = "Year",
+        y = "Number of Defendants",
+        fill = "Their Ideology",
+        caption = "Source: The Prosecution Project"
+    ) +
+    guides(fill = guide_legend(ncol = 6)) +
+    theme_minimal() +
+    theme(
+        plot.title = element_text(size = 14, face = "bold"),
+        plot.subtitle = element_text(size = 12),
+        axis.text = element_text(size = 10),
+        axis.title = element_text(size = 11),
+        panel.grid.minor = element_blank(),
+        legend.position = "bottom",
+        legend.title = element_text(size = 10),
+        legend.text = element_text(size = 9)
+    )  
+```
 
 ## References
 
