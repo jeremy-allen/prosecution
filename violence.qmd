@@ -9,7 +9,7 @@ code-fold: true
 I examine the number of people prosecuted and number of deaths from violent crimes in the United States. Not all
 violent crimes, just violent crimes that have an ideological motivation and guilty verdict. I use
 data[^1] from [The Prosecution Project
-Dataset](https://theprosecutionproject.org/overview-project-description/) (Loadenthal et al. 2023). In this data, each row is a defendant in a case.
+Dataset](https://theprosecutionproject.org/overview-project-description/) (Loadenthal et al. 2023). This data covers 1990 to present, though the most recent events are still being processed and may not appear in the data. In this data, each row represents a defendant in a case.
 
 [^1]: See [The Prosecution Project's FAQ](https://theprosecutionproject.org/faq/) where they discuss what data is included, excluded, and why.
     For example, their data is likely an undercount of violence because they compile their data only
