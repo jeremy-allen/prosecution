@@ -6,15 +6,14 @@ code-fold: true
 
 # Political violence in the US
 
-I examine the number of people prosecuted and number of deaths from violent crimes in the United States. Not all
-violent crimes, just violent crimes that have an ideological motivation and guilty verdict. I use
+I examine the number of people prosecuted for and number of deaths from violent crimes in the United States. I exclude violent crimes that do not have an ideological motivation and guilty verdict. I use
 data[^1] from [The Prosecution Project
 Dataset](https://theprosecutionproject.org/overview-project-description/) (Loadenthal et al. 2023). This data covers 1990 to present, though the most recent events are still being processed and may not appear in the data. In this data, each row represents a defendant in a case.
 
 [^1]: See [The Prosecution Project's FAQ](https://theprosecutionproject.org/faq/) where they discuss what data is included, excluded, and why.
     For example, their data is likely an undercount of violence because they compile their data only
-    from prosecutions. So, if there were a violent incident and the perpetrator were killed onsite,
-    there would be no prosecution and no data point in this set.
+    from prosecutions. If there were a violent crime and the perpetrator were killed or died,
+    there would be no prosecution and thus no data point in this set for that crime.
 
 After Charlie Kirk was assassinated in September, the US president, Donald Trump, and Elon Musk said
 the left is the real problem (Suter 2025; Hutzler and Stoddart 2025). They struggle with numbers, so
@@ -90,16 +89,21 @@ jurisdiction_extract <- function(string1, string2) {
 ```{r}
 #| message: false
 #| warning: false
-df <- read_csv("data/tpp-2025-09-15-general.csv") |> 
+df <- read_csv("data/tpp-2025-09-30-general.csv") |> 
     clean_names()
 
-# fix the mix of numeric and character in the # killed column and case name capitalizations
+# fix the mix of numeric and character in the # killed and injured columns
 df <- df |> 
     mutate(
     number_killed = case_when(
-      number_killed %in% c("Multiple", "Unknown") ~ NA_real_,  # Convert text to NA
-      is.na(number_killed) ~ NA_real_,  # Keep existing NAs
-      TRUE ~ number_killed  # Keep numeric values as they are
+      number_killed %in% c("Multiple", "Unknown") ~ NA_integer_,
+      is.na(number_killed) ~ NA_integer_,
+      TRUE ~ as.integer(number_killed)
+    ),
+    number_injured = case_when(
+      number_injured %in% c("Multiple", "Unknown") ~ NA_integer_,
+      is.na(number_injured) ~ NA_integer_,
+      TRUE ~ as.integer(number_injured)
     )
   )
 
