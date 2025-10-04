@@ -1,7 +1,0 @@
-Not multi-count deaths
-- Add a fed/state/county/city column that indicates trial jurisdiction, current column is only federal/non-federal
-   - so I need to see where a defendant was tried at federal, state, county, or city levels and only count deaths once
-     - to do that I need a column that indicates jurisdiction levels
-       - [x] one issue is that the case names have a handful of inconsistencies in referencing states and federal jurisdictions
-       - another is that some case names are less than two words
-

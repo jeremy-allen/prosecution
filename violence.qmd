@@ -89,7 +89,7 @@ jurisdiction_extract <- function(string1, string2) {
 ```{r}
 #| message: false
 #| warning: false
-df <- read_csv("data/tpp-2025-09-30-general.csv") |> 
+df <- read_csv(fs::dir_ls("./data", glob = "*.csv")) |> 
     clean_names()
 
 # fix the mix of numeric and character in the # killed and injured columns
@@ -201,12 +201,68 @@ duplicates <- df |>
     filter(n() > 1) |> 
     ungroup()
 
-df <- df |> 
+df <- df |>
     filter(!case_id %in% c("09262001_PMC", "02142024_KC"))
+
+# Remove incorrect leftist classification for Cody Michael Tarner (should be rightist)
+df <- df |>
+    filter(!(case_id == "09082020_CMT" & ideological_affiliation == "Leftist: government-focused"))
+
+# Remove incorrect nationalist-separatist classification for Jonathan L. Xie (should be Salafi/Jihadist/Islamist)
+df <- df |>
+    filter(!(case_id == "09152020_JLX" & ideological_affiliation == "Nationalist-separatist"))
+
+# Remove incorrect "Carried through" classification for Cole James Bridges (should be Attempted)
+df <- df |>
+    filter(!(case_id == "02032021_CJB" & completion_of_crime == "Carried through"))
+
+# Remove complaint row for John Malcolm Bareswill (keep indictment only)
+df <- df |>
+    filter(!(case_id == "06112020_JMB" & date_descriptor == "Complaint"))
+
+# Remove incorrect "Not guilty" row for Daniel Delbert Dorson (keep guilty plea row)
+df <- df |>
+    filter(!(case_id == "12162020_DDD_MILLER4"))
+
+# Remove initial indictment for Adis Medunjanin (keep superseding indictment from July 2010)
+df <- df |>
+    filter(!(case_id == "02252010_AM_AHMEDZAY2"))
+
+# Remove initial indictment for Thomas Heard (keep later indictment with full charges)
+df <- df |>
+    filter(!(case_id == "03092019_TH"))
+
+# Remove "Charged but not tried" row for Anthony Comello (keep guilty plea row)
+df <- df |>
+    filter(!(case_id == "04282019_AC"))
+
+# Remove arrest row for Jason Brown (keep indictment row)
+df <- df |>
+    filter(!(case_id == "11142019_JB" & date_descriptor == "Arrest/arraignment"))
+
+# Remove complaint row for Marian Hudak (keep indictment row)
+df <- df |>
+    filter(!(case_id == "06222023_MH" & date_descriptor == "Complaint"))
+
+# Remove indictment row for Rowan McManigal (keep sentencing row)
+df <- df |>
+    filter(!(case_id == "04042022_RM" & date_descriptor == "Indictment"))
+
+# Remove initial indictment for Walter Edmund Bond (keep later consolidated indictment)
+df <- df |>
+    filter(!(case_id == "07272010_WEB"))
+
+# Remove indictment row for Michael David Fox (keep plea row)
+df <- df |>
+    filter(!(case_id == "09202023_MDF" & date_descriptor == "Indictment"))
+
+# Remove arrest row for Omar Alkattoul (keep indictment row)
+df <- df |>
+    filter(!(case_id == "11102022_OA" & date_descriptor == "Arrest/arraignment"))
 
 ```
 
-There are two cases where the defendants are in the data twice for the same charge, once for their indictment and once for a second part of their trial, on different dates. I remove two rows to avoid double counting these two defendants. This leaves us with **`r nrow(df)`** defendants. Four others are duplicates but for different charges, so I keep them.
+There are eight cases where defendants appear in the data multiple times for the same charge but at different stages of prosecution (e.g., indictment, arrest, plea, sentencing). I remove eight rows to avoid double counting these defendants, keeping the row that represents the most complete or final stage of their case. This leaves us with **`r nrow(df)`** defendants.
 
 How many defendants are not linked or motivated politically?
 
@@ -430,7 +486,7 @@ presidents <- tibble(
 ggplot() +
     geom_vline(data = presidents, aes(xintercept = year), 
                color = "black", linetype = "dashed", alpha = 0.7) +
-    geom_text(data = presidents, aes(x = year, y = 70, label = president), 
+    geom_text(data = presidents, aes(x = year, y = 90, label = president), 
               vjust = 1.5, hjust = 0, angle = 90, size = 3, color = "black") +
     geom_col(data = df_yearly, aes(x = year, y = prosecutions, fill = ideology_simple)) +
     scale_fill_manual(values = c(
@@ -569,6 +625,8 @@ plot1
 ```
 ## Notable Trends
 
+An obvious spike for defendants prosecuted during the George Floyd protests in 2020.
+
 ```{r}
 #| message: false
 #| warning: false
@@ -580,7 +638,7 @@ yearly_left <- df_yearly |>
 ggplot() +
     geom_vline(data = presidents, aes(xintercept = year), 
                color = "black", linetype = "dashed", alpha = 0.7) +
-    geom_text(data = presidents, aes(x = year, y = 7, label = president), 
+    geom_text(data = presidents, aes(x = year, y = 38, label = president), 
               vjust = 1.5, hjust = 0, angle = 90, size = 3, color = "black") +
     geom_col(data = yearly_left, aes(x = year, y = prosecutions, fill = ideology_simple)) +
     scale_fill_manual(values = c(
@@ -615,6 +673,8 @@ ggplot() +
 
 ```
 
+And an obvious spike for defendants prosecuted following the January 6 Capital riot in 2021.
+
 ```{r}
 #| message: false
 #| warning: false
@@ -626,7 +686,7 @@ yearly_right <- df_yearly |>
 ggplot() +
     geom_vline(data = presidents, aes(xintercept = year), 
                color = "black", linetype = "dashed", alpha = 0.7) +
-    geom_text(data = presidents, aes(x = year, y = 50, label = president), 
+    geom_text(data = presidents, aes(x = year, y = 80, label = president), 
               vjust = 1.5, hjust = 0, angle = 90, size = 3, color = "black") +
     geom_col(data = yearly_right, aes(x = year, y = prosecutions, fill = ideology_simple)) +
     scale_fill_manual(values = c(
@@ -659,16 +719,19 @@ ggplot() +
         legend.text = element_text(size = 9)
     )  
 ```
+Perhaps the most notable trend is the rise in the number of defendants whose ideology is unclear.
 
 ```{r}
-# just leftist
+#| message: false
+#| warning: false
+
 yearly_unclear <- df_yearly |> 
     filter(ideology_simple == "Unclear")
 
 ggplot() +
     geom_vline(data = presidents, aes(xintercept = year), 
                color = "black", linetype = "dashed", alpha = 0.7) +
-    geom_text(data = presidents, aes(x = year, y = 8, label = president), 
+    geom_text(data = presidents, aes(x = year, y = 12, label = president), 
               vjust = 1.5, hjust = 0, angle = 90, size = 3, color = "black") +
     geom_col(data = yearly_unclear, aes(x = year, y = prosecutions, fill = ideology_simple)) +
     scale_fill_manual(values = c(
@@ -699,7 +762,72 @@ ggplot() +
         legend.position = "bottom",
         legend.title = element_text(size = 10),
         legend.text = element_text(size = 9)
-    )  
+    )
+```
+
+## Unclear Ideological Affiliation
+
+Some defendants in the dataset do not have a clear ideological affiliation. These cases represent violent acts where the motivation is ambiguous or not clearly tied to a specific political ideology. This section examines what methods these defendants used and what kinds of targets they attacked.
+
+```{r}
+#| message: false
+#| warning: false
+
+unclear_ideology <- violent_crimes |>
+    filter(ideology_simple == "Unclear")
+
+# Criminal methods for unclear ideology
+method_counts <- unclear_ideology |>
+    count(criminal_method, sort = TRUE) |>
+    filter(!is.na(criminal_method)) |>
+    slice_head(n = 15)
+
+ggplot(method_counts, aes(x = reorder(criminal_method, n), y = n)) +
+    geom_col(fill = "black", alpha = 0.8) +
+    coord_flip() +
+    labs(
+        title = "Criminal Methods Used by Defendants",
+        subtitle = "With Unclear Ideological Affiliation",
+        x = NULL,
+        y = "Number of Defendants",
+        caption = "Source: The Prosecution Project"
+    ) +
+    theme_minimal() +
+    theme(
+        plot.title = element_text(size = 14, face = "bold"),
+        plot.subtitle = element_text(size = 12),
+        axis.text = element_text(size = 10),
+        axis.title = element_text(size = 11)
+    )
+```
+
+```{r}
+#| message: false
+#| warning: false
+
+# Ideological targets for unclear ideology
+target_counts <- unclear_ideology |>
+    count(`ideological_target`, sort = TRUE) |>
+    filter(!is.na(ideological_target)) |>
+    slice_head(n = 15)
+
+ggplot(target_counts, aes(x = reorder(ideological_target, n), y = n)) +
+    geom_col(fill = "black", alpha = 0.8) +
+    coord_flip() +
+    labs(
+        title = "Targets Attacked by Defendants",
+        subtitle = "With Unclear Ideological Affiliation",
+        x = NULL,
+        y = "Number of Defendants",
+        caption = "Source: The Prosecution Project"
+    ) +
+    theme_minimal() +
+    theme(
+        plot.title = element_text(size = 14, face = "bold"),
+        plot.subtitle = element_text(size = 12),
+        axis.text = element_text(size = 10),
+        axis.title = element_text(size = 11)
+    )
 ```
 
 ## References
